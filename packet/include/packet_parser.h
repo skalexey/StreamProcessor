@@ -9,6 +9,22 @@
 #include "block_stream_reader.h"
 #include "packet.h"
 
+#ifndef __cpp_lib_byteswap
+#include <algorithm>
+#include <array>
+#include <cstddef>
+namespace std
+{
+	template<typename T>
+	constexpr T byteswap(T value) noexcept
+	{
+		auto v = reinterpret_cast<std::array<std::byte, sizeof(T)>*>(&value);
+		std::reverse(v->begin(), v->end());
+		return *reinterpret_cast<T*>(v);
+	}
+}
+#endif
+
 namespace stp
 {
 	class packet_parser
