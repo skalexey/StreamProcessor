@@ -283,9 +283,9 @@ void FileTest()
 	std::cout << "	Load file '" << fname << "' from the run directory\n";
 	if (!file.is_open())
 	{
-		std::cout << "Error: Can't open file '" << fname << "'";
+		std::cout << "Error: Can't open file '" << fname << "'\n";
 #ifdef __cpp_lib_filesystem
-		std::cout << "The file is searched by the path '" << (std::filesystem::current_path() / fname).string() << "'";
+		std::cout << "The file is searched by the path '" << (std::filesystem::current_path() / fname).string() << "'\n";
 #endif
 		return;
 	}
