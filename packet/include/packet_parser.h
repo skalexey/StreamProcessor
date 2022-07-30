@@ -1,5 +1,9 @@
 ﻿// packet_parser.h
 
+// This class is aimed to retrieve packets from a stream of data blocks.
+// Packets are returned in the form of stp::packet class.
+// Work with data stream is deligated to m_reader of block_stream_reader class.
+
 #pragma once
 #include <cstddef>
 #include "block_stream_reader.h"
@@ -33,7 +37,7 @@ namespace stp
 
 	private:
 		block_stream_reader m_reader;
-		parse_task m_task = NONE;
+		parse_task m_task = parse_task::NONE;
 		std::size_t m_packet_size = 0;
 	};
 }

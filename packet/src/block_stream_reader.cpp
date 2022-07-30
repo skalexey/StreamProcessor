@@ -16,8 +16,12 @@ namespace stp
 	block_stream_reader::it_t block_stream_reader::read_n(std::size_t count)
 	{
 		auto read_from = m_cur;
+
 		if (m_remain == 0)
+		{
 			m_remain = count;
+			m_buf.clear();
+		}
 		
 		auto way = std::min(std::size_t(m_end - m_cur), m_remain);
 		m_cur += way;
@@ -63,9 +67,9 @@ namespace stp
 		auto read_from = m_cur;
 		do
 		{
-			if (m_remain == 0)
-				if ((m_cur = std::find(m_cur, m_end, *seq)) == m_end)
-					break;
+			// Search for the first symbol of the sequence
+			if ((m_cur = std::find(m_cur, m_end, *seq)) == m_end)
+				break;
 			// The cursor is on the sequence now. Can read it
 			if (read_and_match(seq, seq_size))
 			{
@@ -89,13 +93,17 @@ namespace stp
 		// Return the stored data reallocated in a single sequential block
 		if (!m_buf.empty())
 			m_buf.clear();
+		// Reserve total size for the buffer first
 		std::size_t size = 0;
 		for (auto&& block : m_endless_storage)
 			size += block.size();
 		m_buf.reserve(size);
+		// Now fill the buffer
 		for (auto&& block : m_endless_storage)
 			m_buf.insert(m_buf.end(), block.begin(), block.end());
+		// Clear intermediate buffer
 		m_endless_storage.clear();
+		// Insert the last part
 		if (begin && end)
 			m_buf.insert(m_buf.end(), begin, end);
 		return read_until_result_t(m_buf.data(), m_buf.data() + m_buf.size());

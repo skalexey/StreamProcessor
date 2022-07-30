@@ -4,6 +4,22 @@
 #include <bit>
 #include "packet_parser.h"
 
+#ifndef __cpp_lib_byteswap
+#include <ranges>
+namespace std
+{
+	template<std::integral T>
+	constexpr T byteswap(T value) noexcept
+	{
+		static_assert(std::has_unique_object_representations_v<T>,
+			"T may not have padding bits");
+		auto value_representation = std::bit_cast<std::array<std::byte, sizeof(T)>>(value);
+		std::ranges::reverse(value_representation);
+		return std::bit_cast<T>(value_representation);
+	}
+}
+#endif
+
 namespace
 {
 	using namespace stp;
@@ -13,7 +29,7 @@ namespace
 	const char* text_packet_end_seq = "\r\n\r\n";
 	const std::size_t text_packet_end_seq_size = strlen(text_packet_end_seq);
 
-	std::size_t parse_packet_size(packet_parser::it_t first, packet_parser::it_t last)
+	inline std::size_t parse_packet_size(packet_parser::it_t first, packet_parser::it_t last)
 	{
 		return std::byteswap(*reinterpret_cast<const unsigned short*>(first));
 	}
@@ -26,8 +42,6 @@ namespace stp
 		if (m_reader.data() == m_reader.end())
 			return nullptr;
 
-		packet::ptr_t ret(nullptr);
-
 		// Work with reader
 
 		if (m_task == parse_task::NONE)
@@ -37,9 +51,9 @@ namespace stp
 		}
 
 		if (auto packet = do_parse_task())
-			return std::move(packet);
-		else
-			return nullptr;
+			return packet;
+		
+		return nullptr;
 	}
 
 	packet::ptr_t packet_parser::do_parse_task(parse_task task)
@@ -65,7 +79,7 @@ namespace stp
 			break;
 		}
 		case parse_task::BIN_PACKET_SIZE:
-			if (auto&& data = m_reader.read_n(bin_packet_size_width))
+			if (auto data = m_reader.read_n(bin_packet_size_width))
 			{
 				m_packet_size = parse_packet_size(data, data + bin_packet_size_width);
 				return do_parse_task(parse_task::BIN_PACKET_DATA);
@@ -82,10 +96,10 @@ namespace stp
 			break;
 		}
 		case parse_task::BIN_PACKET_DATA:
-			if (auto&& data = m_reader.read_n(m_packet_size))
+			if (auto data = m_reader.read_n(m_packet_size))
 			{
 				m_task = parse_task::NONE;
-				return std::move(std::make_unique<packet>(data, data + m_packet_size, true));
+				return std::make_unique<packet>(data, data + m_packet_size, true);
 			}
 			break;
 		default:

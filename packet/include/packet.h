@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <iostream>
+#include <memory>
+#include <cstddef>
 
 namespace stp
 {
@@ -16,6 +17,7 @@ namespace stp
 		packet(it_t data_begin, it_t data_end, bool is_bin)
 			: m_data(data_begin), m_end(data_end), m_is_bin(is_bin) {}
 
+		// Binary packet property
 		inline bool is_bin() const {
 			return m_is_bin;
 		}

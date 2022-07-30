@@ -9,6 +9,7 @@
 #include <cassert>
 #include <bit>
 #include <array>
+#include <chrono>
 #ifdef __cpp_lib_filesystem
 	#include <filesystem>
 #endif
@@ -67,7 +68,7 @@ std::list<block_t> DecomposeData(const block_t& data)
 		ret.emplace_back(it, it + division_point);
 		it += division_point;
 	}
-	return std::move(ret);
+	return ret;
 }
 
 block_t MakeTextPacket(const std::string& data)
@@ -79,7 +80,7 @@ block_t MakeTextPacket(const std::string& data)
 		ret[data.size() + i] = end_seq[i];
 	for (int i = 0; i < data.size(); i++)
 		ret[i] = data[i];
-	return std::move(ret);
+	return ret;
 }
 
 const int bin_pack_size_width = 4;
@@ -89,7 +90,7 @@ block_t MakeBinPacketSize(unsigned short size)
 	auto size_little_endian = std::byteswap(size);
 	auto data = reinterpret_cast<unsigned char*>(&size_little_endian);
 	block_t ret(data, data + 4);
-	return std::move(ret);
+	return ret;
 }
 
 block_t MakeBinPacket(const char* data, std::size_t size)
@@ -103,7 +104,7 @@ block_t MakeBinPacket(const char* data, std::size_t size)
 		ret[i + 1] = sz[i];
 	for (int i = 0; i < size; i++)
 		ret[i + 5] = data[i];
-	return std::move(ret);
+	return ret;
 }
 
 block_t PackData(const char* data, std::size_t size)
@@ -118,7 +119,7 @@ block_t PackData(const char* data, std::size_t size)
 		ret.insert(ret.end(), packet.begin(), packet.end());
 		remaining -= packet_size;
 	}
-	return std::move(ret);
+	return ret;
 }
 
 std::vector<block_t> PackDataIntoArray(const char* data, std::size_t size)
@@ -131,7 +132,7 @@ std::vector<block_t> PackDataIntoArray(const char* data, std::size_t size)
 		ret.emplace_back(MakeBinPacket(data + size - remaining, packet_size));
 		remaining -= packet_size;
 	}
-	return std::move(ret);
+	return ret;
 }
 
 // Callback for tests with text packets from text_blocks array
@@ -199,13 +200,13 @@ block_t CollectPacketsData(bool text = false)
 	block_t all_in_one;
 	for (int i = 0; i < packets_data.size(); i++)
 	{
-		auto packet = std::move(text ?
+		auto packet = text ?
 			MakeTextPacket(packets_data[i])
 			: MakeBinPacket(packets_data[i].data(), packets_data[i].size())
-		);
+		;
 		all_in_one.insert(all_in_one.end(), packet.begin(), packet.end());
 	}
-	return std::move(all_in_one);
+	return all_in_one;
 }
 
 void TextPacketsTest2()
@@ -232,7 +233,7 @@ void BinPacketsTest1()
 
 	for (int i = 0; i < packets_data.size(); i++)
 	{
-		auto packet = std::move(MakeBinPacket(packets_data[i].data(), packets_data[i].size()));
+		auto packet = MakeBinPacket(packets_data[i].data(), packets_data[i].size());
 		SendBlock(r, packet.data(), packet.size());
 	}
 }
@@ -255,8 +256,8 @@ void BinPacketsTest2()
 inline block_t file_contents(const std::string& fpath)
 {
 	std::ifstream f(fpath);
-	return std::move(block_t((std::istreambuf_iterator<char>(f)),
-		(std::istreambuf_iterator<char>())));
+	return block_t((std::istreambuf_iterator<char>(f)),
+		(std::istreambuf_iterator<char>()));
 }
 
 class FileTestCallback : public ICallback
@@ -297,19 +298,23 @@ void FileTest()
 		(std::istreambuf_iterator<char>()));
 	auto blocks = DecomposeData(PackData(data.data(), data.size()));
 
+	auto begin = std::chrono::steady_clock::now();
 	Receiver r;
 	FileTestCallback c;
 	r.SetOnReceive(&c);
 	for (auto it = blocks.begin(); it != blocks.end(); ++it)
 		SendBlock(r, it->data(), it->size(), false);
+	auto end = std::chrono::steady_clock::now();
+	auto dur = end - begin;
+	std::cout << "The test test took " << std::chrono::duration_cast<std::chrono::milliseconds>(dur).count() << "ms\n";
 }
 
 int main(int argc, char* argv[])
 {
 	using namespace stp;
 	std::cout << "=== Test ===\n";
-	TextPacketsTest2();
 	TextPacketsTest();
+	TextPacketsTest2();
 	BinPacketsTest2();
 	FileTest();
 	return 0;

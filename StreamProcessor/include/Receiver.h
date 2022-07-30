@@ -2,10 +2,6 @@
 
 #pragma once
 
-#include <list>
-#include <vector>
-#include <memory>
-#include <optional>
 #include "ReceiverInterface.h"
 #include "CallbackInterface.h"
 #include "packet_parser.h"
