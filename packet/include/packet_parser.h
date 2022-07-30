@@ -17,7 +17,7 @@ namespace std
 	template<typename T>
 	constexpr T byteswap(T value) noexcept
 	{
-		auto v = reinterpret_cast<std::array<std::byte, sizeof(T)>*>(&value);
+		auto v = reinterpret_cast<std::array<unsigned char, sizeof(T)>*>(&value);
 		std::reverse(v->begin(), v->end());
 		return *reinterpret_cast<T*>(v);
 	}

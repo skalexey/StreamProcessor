@@ -9,10 +9,9 @@ if(MSVC)
 	# fix __cplusplus macro for MSVC
 	add_compile_options(
 		"/Zc:__cplusplus"
-		"/std:c++latest"
 	)
 else()
-	set(CMAKE_CXX_STANDARD 20)
+	set(CMAKE_CXX_STANDARD 17)
 endif()
 
 option(packet_INHERIT_PARENT_SRC "Adds all parent's source files" OFF)
