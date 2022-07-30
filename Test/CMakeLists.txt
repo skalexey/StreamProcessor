@@ -142,3 +142,5 @@ foreach(item ${LIBS})
 	endif()
 	MATH(EXPR cnt "${cnt}+1")
 endforeach()
+
+configure_file(test.jpg ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)

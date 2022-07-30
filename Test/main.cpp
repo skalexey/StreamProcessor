@@ -278,7 +278,7 @@ void FileTest()
 {
 	using namespace stp;
 	std::cout << " === File test ===";
-	std::string fname = "../../test.jpg";
+	std::string fname = "test.jpg";
 	auto file = std::ifstream(fname, std::ios::binary);
 	std::cout << "	Load file '" << fname << "' from the run directory\n";
 	if (!file.is_open())
