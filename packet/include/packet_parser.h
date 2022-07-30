@@ -12,7 +12,6 @@
 #ifndef __cpp_lib_byteswap
 #include <algorithm>
 #include <array>
-#include <cstddef>
 namespace std
 {
 	template<typename T>
